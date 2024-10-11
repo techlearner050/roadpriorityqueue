@@ -1,0 +1,122 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX 100
+
+// Structure to represent a road repair job
+struct Job {
+    int priority; // Lower value means higher priority
+    char description[100];
+};
+
+// Structure to represent a Priority Queue
+struct PriorityQueue {
+    struct Job heap[MAX];
+    int size;
+};
+
+// Function to initialize the priority queue
+void initializeQueue(struct PriorityQueue* pq) {
+    pq->size = 0;
+}
+
+// Function to swap two jobs
+void swap(struct Job* a, struct Job* b) {
+    struct Job temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+// Heapify the queue to maintain heap property
+void heapifyUp(struct PriorityQueue* pq, int idx) {
+    int parent = (idx - 1) / 2;
+
+    if (parent >= 0 && pq->heap[parent].priority > pq->heap[idx].priority) {
+        swap(&pq->heap[parent], &pq->heap[idx]);
+        heapifyUp(pq, parent);
+    }
+}
+
+// Function to insert a job into the priority queue
+void insertJob(struct PriorityQueue* pq, int priority, const char* desc) {
+    if (pq->size >= MAX) {
+        printf("Queue is full!\n");
+        return;
+    }
+
+    // Create a new job
+    struct Job newJob;
+    newJob.priority = priority;
+    strcpy(newJob.description, desc);
+
+    // Insert the new job at the end of the heap
+    pq->heap[pq->size] = newJob;
+    pq->size++;
+
+    // Fix the min-heap property
+    heapifyUp(pq, pq->size - 1);
+}
+
+// Heapify down to maintain heap property after deletion
+void heapifyDown(struct PriorityQueue* pq, int idx) {
+    int smallest = idx;
+    int left = 2 * idx + 1;
+    int right = 2 * idx + 2;
+
+    if (left < pq->size && pq->heap[left].priority < pq->heap[smallest].priority) {
+        smallest = left;
+    }
+
+    if (right < pq->size && pq->heap[right].priority < pq->heap[smallest].priority) {
+        smallest = right;
+    }
+
+    if (smallest != idx) {
+        swap(&pq->heap[idx], &pq->heap[smallest]);
+        heapifyDown(pq, smallest);
+    }
+}
+
+// Function to remove and return the highest priority job
+struct Job extractMin(struct PriorityQueue* pq) {
+    if (pq->size <= 0) {
+        printf("Queue is empty!\n");
+        struct Job emptyJob = { -1, "No Jobs" };
+        return emptyJob;
+    }
+
+    struct Job minJob = pq->heap[0];
+    pq->heap[0] = pq->heap[pq->size - 1];
+    pq->size--;
+
+    // Fix the heap property
+    heapifyDown(pq, 0);
+
+    return minJob;
+}
+
+// Function to print the job schedule
+void printSchedule(struct PriorityQueue* pq) {
+    while (pq->size > 0) {
+        struct Job job = extractMin(pq);
+        printf("Priority: %d, Job: %s\n", job.priority, job.description);
+    }
+}
+
+int main() {
+    struct PriorityQueue pq;
+    initializeQueue(&pq);
+
+    // Insert road repair jobs into the priority queue
+    insertJob(&pq, 2, "Repair Road A - Moderate Traffic");
+    insertJob(&pq, 1, "Repair Road B - Critical Condition");
+    insertJob(&pq, 3, "Repair Road C - Low Traffic");
+    insertJob(&pq, 1, "Repair Road D - Emergency");
+
+    // Print the job schedule in order of priority
+    printf("Road Repair Schedule:\n");
+    printSchedule(&pq);
+
+    return 0;
+}
